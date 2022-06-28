@@ -25,7 +25,7 @@ jobs:
       - checkout
       - restore_cache:
           keys: [backend-build]
-      -run:
+      - run:
           name: Back-end build
           command: |
             cd backend
