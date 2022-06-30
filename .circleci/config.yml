@@ -107,9 +107,11 @@ jobs:
           name: Run backend scan
           command: |
             cd backend
-            npm install
-            npm audit fix
-            npm audit
+            npm install > /dev/null
+            npm update mkdirp --depth 6
+            npm install --save-dev webpack@5.73.0
+            npm audit fix --audit-level=critical --force
+            npm audit --audit-level=critical
       - slack/notify:
           channel: $SLACK_DEFAULT_CHANNEL
           event: fail
@@ -146,6 +148,27 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: [97:5a:e7:e9:ef:f5:bf:69:b0:48:78:ad:4a:ec:4c:96]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
+            
+      # Here's where you will add some code to rollback on failure
               
               
 
