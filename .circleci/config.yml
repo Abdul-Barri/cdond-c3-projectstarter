@@ -206,8 +206,8 @@ jobs:
       - run:
           name: Install dependencies - Python
           command: |
-            sudo apt-get update
-            sudo apt-get install python3.8 python3-pip
+            yum apt-get update
+            yum apt-get install python3.8 python3-pip
       - run:
           name: Install dependencies - Ansible
           command: |
@@ -263,5 +263,5 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-      - deploy-frontend
-        #  requires: [run-migrations]
+      - deploy-frontend:
+          requires: [run-migrations]
