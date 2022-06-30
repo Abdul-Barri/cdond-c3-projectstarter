@@ -170,11 +170,7 @@ jobs:
       - run:
           name: Install tar utility
           command: |
-            tar -xzf archive-name.tar.gz
-            cd archive-name
-            ./configure
-            make
-            sudo make install
+            sudo install -y tar gzip
       - run:
           name: Configure server
           command: |
