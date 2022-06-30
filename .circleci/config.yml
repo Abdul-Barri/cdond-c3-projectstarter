@@ -194,6 +194,9 @@ jobs:
             then
                 curl --header "content-length:0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/9tjwkv0s/migration_${CIRCLE_WORKFLOW_ID:0:7}/1
             fi
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY
+          aws-region: AWS_REGION
       - destroy-environment
 
   deploy-frontend:
