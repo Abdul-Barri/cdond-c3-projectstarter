@@ -8,9 +8,8 @@ commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      when_to_run:
+      workflow_id:
         type: string
-        default: "on_fail"
     steps:
       - run:
           name: Destroy environments
@@ -18,6 +17,23 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws s3 rb s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --force
+
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    steps:
+      - run:
+          name: Revert migrations
+          command: |
+            success_migration=$(curl https://keyvalue.immanuel.co/api/KeyVal/GetValue/9tjwkv0s/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            if ((success_migrations == 1));
+            then
+              cd backend
+              npm install
+              npm run migrations:revert
+            fi
+          when: on_fail
+
 
 jobs:
   build-frontend:
@@ -124,6 +140,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install tar utility
+          command: |
+            yum install -y tar gzip
+      - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
@@ -142,18 +162,16 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text >> inventory
-      - run:
-          name: Install tar utility
-          command: |
-            yum install -y tar gzip
+            pwd
+            ls -la
+            cat .circleci/ansible/inventory.txt
+            aws cloudformation \
+              list-exports --query "Exports[?Name==\`backendIP\`].Value" \
+              --no-paginate --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      - destroy-environment
 
   configure-infrastructure:
     docker:
@@ -166,28 +184,35 @@ jobs:
           at: ~/
       - run:
           name: Install dependencies
+          no_output_timeout: 30m
           command: |
-            apk add --update ansible
+            apk add --update ansible && apk add openssh
+      - run:
+          name: Fix host authenticity for inventory
+          no_output_timeout: 30m
+          command: |
+            var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
+            echo $var1
+            ssh-keyscan $var1 >> ~/.ssh/known_hosts
       - run:
           name: Configure server
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
-      - destroy-environment
               
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend-build]
       - run:
           name: Run migrations
+          no_output_timeout: 30m
           command: |
             cd backend
             npm install
             npm run migrations > migrations_dump.txt
+            cat migrations.txt
       - run:
           name: Send migration results to memstash
           command: |
@@ -201,35 +226,24 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend-build]
       - run:
-          name: Install dependencies - Python
+          name: Install tar utility
           command: |
-            yum apt-get update
-            yum apt-get install python3.8 python3-pip
+            yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
       - run:
-          name: Install dependencies - Ansible
+          name: Install dependencies
           command: |
-            apk add --update ansible
-      - run:
-          name: Install dependencies - Node
-          command: |
-            nvm install node
-      - run:
-          name: Install dependencies - NPM
-          command: |
-            npm install
-      - run:
-          name: Install dependencies - AWS CLI
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+            curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
+            yum -y install nodejs
+            yum -y install tar gzip   
       - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress')
+            BACKEND_IP=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`backendIP\`].Value" \
+              --no-paginate --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
@@ -238,11 +252,14 @@ jobs:
           name: Deploy frontend objects
           command: |
             cd frontend
+            cat .env
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      - destroy-environment
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations
 
 workflows:
   default:
