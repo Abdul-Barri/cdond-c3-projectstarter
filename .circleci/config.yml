@@ -152,7 +152,6 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      - run: return 1
       - destroy-environment
 
   configure-infrastructure:
@@ -168,6 +167,10 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update ansible
+      - run:
+          name: Install tar utility
+          command: |
+            yum install -y tar gzip
       - run:
           name: Configure server
           command: |
