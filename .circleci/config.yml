@@ -172,6 +172,9 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
 
   configure-infrastructure:
     docker:
@@ -199,7 +202,10 @@ jobs:
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
-              
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
@@ -210,7 +216,6 @@ jobs:
           no_output_timeout: 30m
           command: |
             cd backend
-            npm install
             npm run migrations > migrations_dump.txt
             cat migrations.txt
       - run:
@@ -220,6 +225,9 @@ jobs:
             then
                 curl --header "content-length:0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/9tjwkv0s/migration_${CIRCLE_WORKFLOW_ID:0:7}/1
             fi
+      - destroy_environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
 
   deploy-frontend:
     docker:
@@ -259,6 +267,7 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
       - revert-migrations
 
 workflows:
