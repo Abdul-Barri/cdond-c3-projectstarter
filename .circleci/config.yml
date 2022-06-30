@@ -170,7 +170,11 @@ jobs:
       - run:
           name: Install tar utility
           command: |
-            yum install -y tar gzip
+            tar -xzf archive-name.tar.gz
+            cd archive-name
+            ./configure
+            make
+            sudo make install
       - run:
           name: Configure server
           command: |
