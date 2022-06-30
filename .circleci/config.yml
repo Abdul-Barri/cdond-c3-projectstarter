@@ -109,9 +109,9 @@ jobs:
           command: |
             cd backend
             npm install
+            npm audit fix
           # npm update mkdirp --depth 6
           # npm install --save-dev webpack@5.73.0
-            npm audit fix
           # npm audit --audit-level=critical
       - slack/notify:
           channel: $SLACK_DEFAULT_CHANNEL
