@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   aws-cli: circleci/aws-cli@3.1
+  slack: circleci/slack@4.10.1
 
 commands:
   destroy-environment:
@@ -17,9 +18,6 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
-
-orbs: 
-  slack: circleci/slack@4.10.1
 
 jobs:
   build-frontend:
