@@ -168,10 +168,6 @@ jobs:
           command: |
             apk add --update ansible
       - run:
-          name: Install tar utility
-          command: |
-            sudo install -y tar gzip
-      - run:
           name: Configure server
           command: |
             cd .circleci/ansible
