@@ -213,6 +213,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install AWS CLI dependencies
           # working_directory: /tmp
@@ -227,7 +229,6 @@ jobs:
           command: |
             cd backend
             npm install
-            npm audit fix
             npm run build
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
