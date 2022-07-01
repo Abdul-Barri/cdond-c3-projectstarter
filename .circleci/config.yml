@@ -128,9 +128,6 @@ jobs:
             cd backend
             npm install
             npm audit fix
-          # npm update mkdirp --depth 6
-          # npm install --save-dev webpack@5.73.0
-          # npm audit --audit-level=critical
       - slack/notify:
           channel: $SLACK_DEFAULT_CHANNEL
           event: fail
@@ -164,12 +161,11 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            pwd
-            ls -la
-            cat .circleci/ansible/inventory.txt
-            aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP\`].Value" \
-              --no-paginate --output text >> .circleci/ansible/inventory.txt
+            aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> inventory.txt
+            cat inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -192,17 +188,11 @@ jobs:
           no_output_timeout: 30m
           command: |
             apk add --update ansible && apk add openssh
-      # - run:
-      #     name: Fix host authenticity for inventory
-      #     no_output_timeout: 30m
-      #     command: |
-      #       var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
-      #       echo $var1
-      #       ssh-keyscan $var1 >> ~/.ssh/known_hosts
       - run:
           name: Configure server
           command: |
             cd .circleci/ansible
+            cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -238,9 +228,9 @@ jobs:
             then
                 curl --header "content-length:0" -X POST https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/9tjwkv0s/migration_${CIRCLE_WORKFLOW_ID:0:7}/1
             fi
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-          when: on_fail
+      # - destroy-environment:
+      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      #     when: on_fail
 
   deploy-frontend:
     docker:
@@ -262,9 +252,10 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            BACKEND_IP=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP\`].Value" \
-              --no-paginate --output text)
+            export BACKEND_IP=$(aws ec2 describe-instances \
+                --query 'Reservations[*].Instances[*].PublicDnsName' \
+                --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+                --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
@@ -282,6 +273,49 @@ jobs:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
       - revert-migrations
+
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: [97:5a:e7:e9:ef:f5:bf:69:b0:48:78:ad:4a:ec:4c:96]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible && apk add openssh && apk add --update nodejs npm
+      - run:
+          name: Deploy backend
+          no_output_timeout: 30m
+          command: |
+            echo ENVIROMENT=production > "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+            cd backend
+            npm i
+            npm run build
+            tar -czvf /etc/artifact.tar.gz ./
+            chmod 644 /etc/artifact.tar.gz
+            echo "here"
+            cd ..
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+      - revert-migrations
+
 
 workflows:
   default:
@@ -303,4 +337,6 @@ workflows:
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
           requires: [run-migrations]
