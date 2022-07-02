@@ -328,8 +328,8 @@ jobs:
             cd backend
             npm i
             npm run build
-            tar -czvf /etc/artifact.tar.gz ./
-            chmod 644 /etc/artifact.tar.gz
+            tar -C backend -czvf artifact.tar.gz ./
+            chmod 644 artifact.tar.gz
             echo "here"
             cd ..
             cd .circleci/ansible

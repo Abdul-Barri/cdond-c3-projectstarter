@@ -15,11 +15,22 @@
     path: ~/udapeople/
     state: directory
 
+- name: "install npm packages"
+  become: true
+  command: npm install --force
+  args:
+    chdir: ~/udapeople/
+
+- name: "compile npm packages"
+  become: true
+  command: npm run build
+  args:
+    chdir: ~/udapeople/
 
 - name: "deploy backend"
   become: true
   unarchive:
-    src: /etc/artifact.tar.gz
+    src: /artifact.tar.gz
     dest: ~/udapeople/
 
 - name: "run backend"
@@ -35,20 +46,6 @@
 #     src: /root/project/backend
 #     dest: /root
 #     force: no
-
-    
-- name: "install npm packages"
-  become: true
-  command: npm install --force
-  args:
-    chdir: ~/udapeople/
-
-- name: "compile npm packages"
-  become: true
-  command: npm run build
-  args:
-    chdir: ~/udapeople/
-
 
 - name: "start server"
   become: true
