@@ -1,22 +1,37 @@
+---
+- name: "upgrade packages."
+  become: true
+  apt:
+    upgrade: "yes"
+- name: "install dependencies."
+  become: true
+  apt:
+    name: ["nodejs", "npm"]
+    update_cache: yes
+
+- name: "copy backend file"
+  become: true
+  copy:
+    src: /root/project/backend
+    dest: /root
+    force: no
+
+    
+- name: "install npm packages"
+  become: true
+  command: npm install --force
+  args:
+    chdir: /root/backend
+
+- name: "compile npm packages"
+  become: true
+  command: npm run build
+  args:
+    chdir: /root/backend
 
 
-
-- name: "Create directory"
-  become_user: true
-  file:
-    path: ~/udapeople/
-    state: directory
-
-
-- name: "deploy backend"
-  become_user: true
-  unarchive:
-    src: /etc/artifact.tar.gz
-    dest: ~/udapeople/
-
-- name: "run backend"
-  become_user: true
-  shell: |
-    cd ~/udapeople/
-    npm i
-    pm2 start npm -- run start
+- name: "start server"
+  become: true
+  command: pm2 start npm -- run start
+  args:
+    chdir: /root/backend/dist
