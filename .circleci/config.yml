@@ -328,7 +328,7 @@ jobs:
             cd backend
             npm i
             npm run build
-            npm audit fix
+            npm audit fix --force
             tar -C backend -czvf artifact.tar.gz ./
             chmod 644 artifact.tar.gz
             echo "here"
