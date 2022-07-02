@@ -1,25 +1,22 @@
 ---
 - name: "update apt packages."
-  become: true
+  become: yes
   apt:
     update_cache: yes
 
-- name: "upgrade packages."
-  become: true
+- name: "upgrade packages"
+  become: yes
   apt:
-    upgrade: "yes"
+    upgrade: yes
+
+- name: remove dependencies that are no longer required
+  become: yes
+  apt:
+    autoremove: yes
 
 - name: "install dependencies."
-  become: true
-  apt:
-    name: ["nodejs", "npm"]
-    state: latest
-    update_cache: yes
-
-- name: "install pm2"
-  become: true
-  npm:
-    name: pm2
-    global: yes
-    production: yes
-    state: present
+  become: yes
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    sudo npm install pm2 -g
