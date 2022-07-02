@@ -50,7 +50,7 @@ Resources:
 
 Outputs:
   backendIP:
-    Description: The IP of the EC2Instance
-    Value: !GetAtt EC2Instance.PublicIp
+    Description: The IP (DNS Name) of the EC2Instance
+    Value: !GetAtt EC2Instance.PublicDnsName
     Export:
       Name: "backendIP"

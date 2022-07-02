@@ -1,22 +1,39 @@
+---
+  - name: "show remote environment"
+    shell: env
 
+  - name: "copy backend binaries"
+    become: yes
+    synchronize:
+      src: ../../backend/dist
+      dest: /home/ubuntu/uda_app
+      recursive: true
 
+  - name: "copy node_modules"
+    become: yes
+    synchronize:
+      src: ../../backend/node_modules
+      dest: /home/ubuntu/uda_app
+      recursive: true
 
-- name: "Create directory"
-  become_user: true
-  file:
-    path: ~/udapeople/
-    state: directory
+  - name: "delete anything that might already be running"
+    become: true
+    command: pm2 delete all
+    ignore_errors: true
 
-
-- name: "deploy backend"
-  become_user: true
-  unarchive:
-    src: /etc/artifact.tar.gz
-    dest: ~/udapeople/
-
-- name: "run backend"
-  become_user: true
-  shell: |
-    cd ~/udapeople/
-    npm i
-    pm2 start npm -- run start
+  - name: "start server"
+    become: true
+    command: pm2 start -f ./main.js
+    args:
+      chdir: /home/ubuntu/uda_app/dist
+    environment:
+     ENVIRONMENT: "{{ lookup('env','ENVIRONMENT') }}"
+     TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}"
+     TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}"
+     TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST')}}"
+     TYPEORM_PORT: 5432
+     TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME')}}"
+     TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD')}}"
+     TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE')}}"
+     TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}"
+     TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}"
