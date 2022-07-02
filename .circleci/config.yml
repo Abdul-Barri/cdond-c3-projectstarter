@@ -190,11 +190,19 @@ jobs:
           at: ~/
       - run:
           name: Install dependencies
-          no_output_timeout: 30m
+          no_output_timeout: 20m
           command: |
             apk add --update ansible && apk add openssh
       - run:
+          name: Fix host authenticity for inventory
+          no_output_timeout: 20m
+          command: |
+            var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
+            echo $var1
+            ssh-keyscan $var1 >> ~/.ssh/known_hosts
+      - run:
           name: Configure server
+          no_output_timeout: 20m
           command: |
             cd .circleci/ansible
             cat inventory.txt
@@ -219,7 +227,7 @@ jobs:
             sudo ./aws/install
       - run:
           name: Run migrations
-          no_output_timeout: 30m
+          no_output_timeout: 20m
           command: |
             cd backend
             npm install
@@ -292,9 +300,17 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update ansible && apk add openssh && apk add --update nodejs npm
+            apk add --update curl
+            pip install awscli
+      - run:
+          name: Fix host authenticity for inventory
+          command: |
+            var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
+            echo $var1
+            ssh-keyscan $var1 >> ~/.ssh/known_hosts
       - run:
           name: Deploy backend
-          no_output_timeout: 30m
+          no_output_timeout: 20m
           command: |
             echo ENVIROMENT=production > "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
