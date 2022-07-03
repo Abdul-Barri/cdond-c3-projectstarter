@@ -30,16 +30,26 @@
     production: yes
     state: present
 
-- name: Creates directory
-  file:
-    path: ~/backend_server
-    state: directory
+- name: "copy files from CircleCI to server"
+  copy:
+    src: /root/project/backend
+    dest: /home/ubuntu
 
-- name: Copy index test page
-  template:
-    src: "/backend"
-    dest: "~/backend_server/"
+# - name: Creates directory
+#   file:
+#     path: ~/backend_server
+#     state: directory
 
-- name: Executing node
+# - name: Copy index test page
+#   template:
+#     src: "/artifact.tar.gz"
+#     dest: "~/backend_server/"
+
+- name: "use pm2 to run the node server"
   shell: |
-    pm2 start ~/backend_server/backend/index.js -f
+    cd /home/ubuntu/backend
+    pm2 start npm -- run "start:dev"
+
+# - name: Executing node
+#   shell: |
+#     pm2 start ~/backend_server/index.js -f
