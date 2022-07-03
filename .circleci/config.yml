@@ -330,12 +330,12 @@ jobs:
             npm run build
             npm audit fix --force
             cd ..
-          # tar -C backend -czvf artifact.tar.gz ./
-          # chmod 644 artifact.tar.gz
             echo "here"
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
+          # tar -C backend -czvf artifact.tar.gz ./
+          # chmod 644 artifact.tar.gz
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
