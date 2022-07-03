@@ -1,54 +1,45 @@
 ---
-- name: "upgrade packages."
+- name: "update apt packages."
   become: true
   apt:
-    upgrade: "yes"
+    update_cache: yes
+
+- name: "upgrade packages"
+  become: true
+  apt:
+    upgrade: yes
+
+
+- name: remove dependencies that are no longer required
+  become: true
+  apt:
+    autoremove: yes
+
 - name: "install dependencies."
   become: true
   apt:
     name: ["nodejs", "npm"]
+    state: latest
     update_cache: yes
 
-- name: "Create directory"
+- name: "install pm2"
   become: true
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+- name: Creates directory
   file:
-    path: ~/udapeople/
+    path: ~/backend_server
     state: directory
 
-- name: "install npm packages"
-  become: true
-  command: npm install --force
-  args:
-    chdir: ~/udapeople/
+- name: Copy index test page
+  template:
+    src: "/backend"
+    dest: "~/backend_server/"
 
-- name: "compile npm packages"
-  become: true
-  command: npm run build
-  args:
-    chdir: ~/udapeople/
-
-- name: "deploy backend"
-  become: true
-  unarchive:
-    src: /artifact.tar.gz
-    dest: ~/udapeople/
-
-- name: "run backend"
-  become: true
+- name: Executing node
   shell: |
-    cd ~/udapeople/
-    npm i
-    pm2 start npm -- run start
-
-# - name: "copy backend file"
-#   become: true
-#   copy:
-#     src: /root/project/backend
-#     dest: /root
-#     force: no
-
-- name: "start server"
-  become: true
-  command: pm2 start npm -- run start
-  args:
-    chdir: ~/udapeople/dist
+    pm2 start ~/backend_server/backend/index.js -f

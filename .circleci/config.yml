@@ -330,8 +330,8 @@ jobs:
             npm run build
             npm audit fix --force
             cd ..
-            tar -C backend -czvf artifact.tar.gz ./
-            chmod 644 artifact.tar.gz
+          # tar -C backend -czvf artifact.tar.gz ./
+          # chmod 644 artifact.tar.gz
             echo "here"
             cd .circleci/ansible
             cat inventory.txt
