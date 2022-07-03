@@ -40,7 +40,7 @@
 - name: "deploy backend"
   become_user: true
   unarchive:
-    src: /etc/artifact.tar.gz
+    src: /artifact.tar.gz
     dest: ~/udapeople/
 
 # - name: "copy files from CircleCI to server"
