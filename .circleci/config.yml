@@ -313,7 +313,7 @@ jobs:
             ssh-keyscan $var1 >> ~/.ssh/known_hosts
       - run:
           name: Deploy backend
-          no_output_timeout: 5m
+          no_output_timeout: 30m
           command: |
             echo ENVIROMENT=production > "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
@@ -329,6 +329,8 @@ jobs:
             npm i
             npm run build
             npm audit fix --force
+            tar -czvf artifact.tar.gz ./
+            chmod 644 artifact.tar.gz
             cd ..
             echo "here"
             cd .circleci/ansible
@@ -365,9 +367,9 @@ jobs:
             curl -s ${BACKEND_URL} | grep "\"status\":\"ok\""
             if [$(api_status) = "ok"]
             then
-              return 1
-            else
               return 0
+            else
+              return 1
             fi
       - run:
           name: Frontend smoke test.

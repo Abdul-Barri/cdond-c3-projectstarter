@@ -30,10 +30,23 @@
     production: yes
     state: present
 
-- name: "copy files from CircleCI to server"
-  copy:
-    src: /root/project/backend
-    dest: /home/ubuntu
+- name: "Create directory"
+  become_user: true
+  file:
+    path: ~/udapeople/
+    state: directory
+
+
+- name: "deploy backend"
+  become_user: true
+  unarchive:
+    src: /etc/artifact.tar.gz
+    dest: ~/udapeople/
+
+# - name: "copy files from CircleCI to server"
+#   copy:
+#     src: /root/project/backend
+#     dest: /home/ubuntu
 
 # - name: Creates directory
 #   file:
@@ -47,7 +60,8 @@
 
 - name: "use pm2 to run the node server"
   shell: |
-    cd /home/ubuntu/backend
+    cd ~/udapeople/
+    npm i
     pm2 start npm -- run "start:dev"
 
 # - name: Executing node
