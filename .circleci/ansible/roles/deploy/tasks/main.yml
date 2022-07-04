@@ -73,11 +73,6 @@
 #     src: /root/project/backend
 #     dest: /home/ubuntu
 
-# - name: Creates directory
-#   file:
-#     path: ~/backend_server
-#     state: directory
-
 # - name: Copy index test page
 #   template:
 #     src: "/artifact.tar.gz"
