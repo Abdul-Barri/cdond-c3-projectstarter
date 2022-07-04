@@ -1,4 +1,7 @@
 ---
+- name: "show remote environment"
+  shell: env
+
 - name: "update apt packages."
   become: true
   apt:
@@ -8,7 +11,6 @@
   become: true
   apt:
     upgrade: yes
-
 
 - name: remove dependencies that are no longer required
   become: true
@@ -29,12 +31,6 @@
     global: yes
     production: yes
     state: present
-
-# - name: "Create directory"
-#   become_user: true
-#   file:
-#     path: ~/udapeople/
-#     state: directory
 
 - name: "copy backend binaries"
   become: true
@@ -61,6 +57,18 @@
   args:
     chdir: /home/ubuntu/udapeople
 
+  environment:
+   ENVIRONMENT: "{{ lookup('env','ENVIRONMENT') }}"
+   CIRCLE_WORKFLOW_ID: "{{ lookup('env','CIRCLE_WORKFLOW_ID') }}"
+   TYPEORM_CONNECTION: "{{ lookup('env','TYPEORM_CONNECTION') }}"
+   TYPEORM_ENTITIES: "{{ lookup('env','TYPEORM_ENTITIES') }}"
+   TYPEORM_HOST: "{{ lookup('env','TYPEORM_HOST') }}"
+   TYPEORM_PORT: "{{ lookup('env','TYPEORM_PORT') }}"
+   TYPEORM_USERNAME: "{{ lookup('env','TYPEORM_USERNAME') }}"
+   TYPEORM_PASSWORD: "{{ lookup('env','TYPEORM_PASSWORD') }}"
+   TYPEORM_DATABASE: "{{ lookup('env','TYPEORM_DATABASE') }}"
+   TYPEORM_MIGRATIONS: "{{ lookup('env','TYPEORM_MIGRATIONS') }}"
+   TYPEORM_MIGRATIONS_DIR: "{{ lookup('env','TYPEORM_MIGRATIONS_DIR') }}"
 
 # - name: "deploy backend"
 #   become_user: true
