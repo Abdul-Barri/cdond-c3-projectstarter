@@ -30,18 +30,43 @@
     production: yes
     state: present
 
-- name: "Create directory"
-  become_user: true
-  file:
-    path: ~/udapeople/
-    state: directory
+# - name: "Create directory"
+#   become_user: true
+#   file:
+#     path: ~/udapeople/
+#     state: directory
+
+- name: "copy backend binaries"
+  become: true
+  synchronize:
+    src: ../../backend/dist
+    dest: /home/ubuntu/udapeople
+    recursive: true
+
+- name: "copy node_modules"
+  become: true
+  synchronize:
+    src: ../../backend/node_modules
+    dest: /home/ubuntu/udapeople
+    recursive: true
+
+- name: "delete anything that might already be running"
+  become: true
+  command: pm2 delete all
+  ignore_errors: true
+
+- name: "start server"
+  become: true
+  command: pm2 start -f ./main.js
+  args:
+    chdir: /home/ubuntu/udapeople/dist
 
 
-- name: "deploy backend"
-  become_user: true
-  unarchive:
-    src: /artifact.tar.gz
-    dest: ~/udapeople/
+# - name: "deploy backend"
+#   become_user: true
+#   unarchive:
+#     src: /artifact.tar.gz
+#     dest: ~/udapeople/
 
 # - name: "copy files from CircleCI to server"
 #   copy:
@@ -58,11 +83,11 @@
 #     src: "/artifact.tar.gz"
 #     dest: "~/backend_server/"
 
-- name: "use pm2 to run the node server"
-  shell: |
-    cd ~/udapeople/
-    npm i
-    pm2 start npm -- run "start:dev"
+# - name: "use pm2 to run the node server"
+#   shell: |
+#     cd ~/udapeople/
+#     npm i
+#     pm2 start npm -- run "start:dev"
 
 # - name: Executing node
 #   shell: |

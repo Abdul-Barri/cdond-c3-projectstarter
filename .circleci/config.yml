@@ -329,8 +329,6 @@ jobs:
             npm i
             npm run build
             npm audit fix --force
-            tar -czvf artifact.tar.gz ./
-            chmod 644 artifact.tar.gz
             cd ..
             echo "here"
             cd .circleci/ansible
