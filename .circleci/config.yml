@@ -192,7 +192,8 @@ jobs:
           name: Install dependencies
           no_output_timeout: 20m
           command: |
-            apk add --update ansible && apk add openssh
+            apk add --update ansible
+            apk add openssh-client
       - run:
           name: Fix host authenticity for inventory
           no_output_timeout: 20m
@@ -354,6 +355,9 @@ jobs:
           command: |
             apk add --update curl nodejs npm
             pip install awscli
+            apk add --update curl
+            apk add --upgrade bash
+            apk add openssh-client
       - run:
           name: Backend smoke test.
           command: |
@@ -368,15 +372,6 @@ jobs:
             else
               return 1
             fi
-          # BACKEND_URL="http://${BACKEND_IP}:3030/api/status"
-          # echo "Backend url: ${BACKEND_URL}"
-          # curl -s ${BACKEND_URL} | grep "\"status\":\"ok\""
-          # if [$(api_status) = "ok"]
-          # then
-          #   return 0
-          # else
-          #   return 1
-          # fi
       - run:
           name: Frontend smoke test.
           command: |
@@ -388,11 +383,11 @@ jobs:
             else
               return 1
             fi
-      # - destroy-environment:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
-      # - revert-migrations:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
@@ -425,11 +420,11 @@ jobs:
               --stack-name InitialStack \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople
-      # - destroy-environment:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
-      # - revert-migrations:
-      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - persist_to_workspace:
           root: ~/
           paths:
