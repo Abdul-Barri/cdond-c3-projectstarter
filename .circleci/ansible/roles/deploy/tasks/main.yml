@@ -35,7 +35,7 @@
 - name: "copy backend binaries"
   become: true
   synchronize:
-    src: ../../backend
+    src: ../../backend/*
     dest: /home/ubuntu/udapeople
     recursive: true
 
@@ -51,16 +51,14 @@
   command: pm2 delete all
   ignore_errors: true
 
-- name: "build package"
-  shell: |
-    cd /home/ubuntu/udapeople
-    npm run build
-
 - name: "use pm2 to run the node server"
+  become: true
   shell: |
     cd ~/udapeople/
     npm i
-    pm2 start npm -- run "start:dev"
+    npm run build
+    npm audit fix
+    pm2 start ~/udapeople/dist/main.js -f
 
 # - name: "start server"
 #   become: true
