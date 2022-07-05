@@ -52,7 +52,6 @@
   ignore_errors: true
 
 - name: "use pm2 to run the node server"
-  become: true
   shell: |
     cp -r ~/udapeople/backend/* ~/udapeople
     cd ~/udapeople/
