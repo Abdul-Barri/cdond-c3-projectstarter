@@ -24,6 +24,17 @@
     state: latest
     update_cache: yes
 
+- name: "install n"
+  become: true
+  npm:
+    name: n
+    global: yes
+    production: yes
+
+- name: "install nodejs 13.8.0"
+  become: true
+  shell: n 13.8.0
+
 - name: "install pm2"
   become: true
   npm:
@@ -55,10 +66,10 @@
   shell: |
     cp -r ~/udapeople/backend/* ~/udapeople
     cd ~/udapeople/
-    npm i
-    npm run build
-    npm audit fix
-    pm2 start ~/udapeople/dist/main.js -f
+    sudo npm i
+    sudo npm audit fix
+    sudo npm run build
+    sudo pm2 start ~/udapeople/dist/main.js -f
 
 # - name: "start server"
 #   become: true
