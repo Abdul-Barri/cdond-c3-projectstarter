@@ -328,7 +328,6 @@ jobs:
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
             cd backend
             npm i
-            npm audit fix --force
             npm run build
             cd ..
             echo "here"
