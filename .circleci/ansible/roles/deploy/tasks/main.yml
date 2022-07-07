@@ -67,9 +67,10 @@
     cp -r ~/udapeople/backend/* ~/udapeople
     cd ~/udapeople/
     sudo npm i
-    sudo npm audit fix
+    sudo npm audit fix --force
     sudo npm run build
     sudo pm2 start ~/udapeople/dist/main.js -f
+
 
 # - name: "start server"
 #   become: true

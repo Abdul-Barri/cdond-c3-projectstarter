@@ -328,8 +328,8 @@ jobs:
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
             cd backend
             npm i
-            npm run build
             npm audit fix --force
+            npm run build
             cd ..
             echo "here"
             cd .circleci/ansible
