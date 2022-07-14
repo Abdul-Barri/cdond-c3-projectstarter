@@ -194,6 +194,8 @@ jobs:
           command: |
             apk add --update ansible
             apk add openssh-client
+            pip install awscli
+            aws --version
       - run:
           name: Fix host authenticity for inventory
           no_output_timeout: 20m
