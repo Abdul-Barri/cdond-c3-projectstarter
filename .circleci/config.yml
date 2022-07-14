@@ -5,6 +5,8 @@ orbs:
   slack: circleci/slack@4.10.1
 
 commands:
+
+  # Command to destroy back-end and front-end cloudformation stacks including s3 bucket given a workflow ID
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -22,6 +24,7 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
             aws s3 rb s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --force
 
+  # Command to revert the last migration if successfully run in the current workflow
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
@@ -429,6 +432,34 @@ jobs:
           root: ~/
           paths:
             - OldWorkflowID.txt
+  
+  cleanup:
+  docker:
+    - image: amazon/aws-cli
+  steps:
+    - checkout
+    - run:
+        name: Get old stack workflow id
+        command: |
+          export OldWorkflowID=$(aws cloudformation \
+            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+            --no-paginate --output text)
+          echo OldWorkflowID: "${OldWorkflowID}"
+          echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"          
+          export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+            --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+          echo Stack names: "${STACKS[@]}"
+    - run:
+        name: Remove old stacks and files
+        command: |
+          if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
+          then
+            aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+            aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+            aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+          else
+            echo "$OldWorkflowID==$CurrentWorkflowID => all good."
+          fi
 
 workflows:
   default:
@@ -457,3 +488,5 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
