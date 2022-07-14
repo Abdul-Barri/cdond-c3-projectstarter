@@ -1,4 +1,9 @@
 ---
+- name: "Extract artifact to EC2"
+  unarchive:
+    src: ~/project/artifact.tar.gz
+    dest: /home/ubuntu
+
 - name: "show remote environment"
   shell: env
 
@@ -43,40 +48,32 @@
     production: yes
     state: present
 
-- name: "copy backend binaries"
-  become: true
-  synchronize:
-    src: ../../backend/
-    dest: /home/ubuntu/udapeople
-    recursive: true
+- name: "Start application"
+  command:
+    cmd: pm2 start npm -- start
 
-- name: "copy node_modules"
-  become: true
-  synchronize:
-    src: ../../backend/node_modules
-    dest: /home/ubuntu/udapeople
-    recursive: true
-
-- name: "delete anything that might already be running"
-  become: true
-  command: pm2 delete all
-  ignore_errors: true
-
-- name: "use pm2 to run the node server"
-  shell: |
-    cp -r ~/udapeople/backend/* ~/udapeople
-    cd ~/udapeople/
-    sudo npm i
-    sudo npm audit fix --force
-    sudo npm run build
-    sudo pm2 start ~/udapeople/dist/main.js -f
-
-
-# - name: "start server"
+# - name: "copy backend binaries"
 #   become: true
-#   command: pm2 start -f ./main.js
-#   args:
-#     chdir: /home/ubuntu/udapeople
+#   synchronize:
+#     src: ../../backend/
+#     dest: /home/ubuntu/udapeople
+#     recursive: true
+
+# - name: "copy node_modules"
+#   become: true
+#   synchronize:
+#     src: ../../backend/node_modules
+#     dest: /home/ubuntu/udapeople
+#     recursive: true
+
+# - name: "use pm2 to run the node server"
+#   shell: |
+#     cp -r ~/udapeople/backend/* ~/udapeople
+#     cd ~/udapeople/
+#     sudo npm i
+#     sudo npm audit fix --force
+#     sudo npm run build
+#     sudo pm2 start ~/udapeople/dist/main.js -f
 
   environment:
    ENVIRONMENT: "{{ lookup('env','ENVIRONMENT') }}"
@@ -90,7 +87,3 @@
    TYPEORM_DATABASE: "{{ lookup('env','TYPEORM_DATABASE') }}"
    TYPEORM_MIGRATIONS: "{{ lookup('env','TYPEORM_MIGRATIONS') }}"
    TYPEORM_MIGRATIONS_DIR: "{{ lookup('env','TYPEORM_MIGRATIONS_DIR') }}"
-
-# - name: Executing node
-#   shell: |
-#     pm2 start ~/backend_server/index.js -f
