@@ -52,13 +52,6 @@
   command:
     cmd: pm2 start npm -- start
 
-# - name: "copy backend binaries"
-#   become: true
-#   synchronize:
-#     src: ../../backend/
-#     dest: /home/ubuntu/udapeople
-#     recursive: true
-
 # - name: "copy node_modules"
 #   become: true
 #   synchronize:
