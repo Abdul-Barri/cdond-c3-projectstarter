@@ -203,13 +203,13 @@ jobs:
             apk add openssh-client
             pip install awscli
             aws --version
-      - run:
-          name: Fix host authenticity for inventory
-          no_output_timeout: 20m
-          command: |
-            var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
-            echo $var1
-            ssh-keyscan $var1 >> ~/.ssh/known_hosts
+      # - run:
+      #     name: Fix host authenticity for inventory
+      #     no_output_timeout: 20m
+      #     command: |
+      #       var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
+      #       echo $var1
+      #       ssh-keyscan $var1 >> ~/.ssh/known_hosts
       - run:
           name: Configure server
           no_output_timeout: 20m
