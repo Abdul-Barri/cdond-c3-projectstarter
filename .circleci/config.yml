@@ -176,7 +176,7 @@ jobs:
             ls -la
             cat .circleci/ansible/inventory.txt
             aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP3\`].Value" \
+              list-exports --query "Exports[?Name==\`backendIP4\`].Value" \
               --no-paginate --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
@@ -276,7 +276,7 @@ jobs:
           name: Get backend url
           command: |
             BACKEND_IP=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP3\`].Value" \
+              list-exports --query "Exports[?Name==\`backendIP4\`].Value" \
               --no-paginate --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
@@ -369,7 +369,7 @@ jobs:
           name: Backend smoke test.
           command: |
             BACKEND_IP=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP3\`].Value" \
+              list-exports --query "Exports[?Name==\`backendIP4\`].Value" \
               --no-paginate --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
