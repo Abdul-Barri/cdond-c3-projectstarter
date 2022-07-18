@@ -53,4 +53,4 @@ Outputs:
     Description: The IP of the EC2Instance
     Value: !GetAtt EC2Instance.PublicIp
     Export:
-      Name: "backendIP2"
+      Name: "backendIP3"
