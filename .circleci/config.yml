@@ -176,7 +176,7 @@ jobs:
             ls -la
             cat .circleci/ansible/inventory.txt
             aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP4\`].Value" \
+              list-exports --query "Exports[?Name==\`backendIP5\`].Value" \
               --no-paginate --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
@@ -276,7 +276,7 @@ jobs:
           name: Get backend url
           command: |
             BACKEND_IP=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP4\`].Value" \
+              list-exports --query "Exports[?Name==\`backendIP5\`].Value" \
               --no-paginate --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
@@ -369,7 +369,7 @@ jobs:
           name: Backend smoke test.
           command: |
             BACKEND_IP=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`backendIP4\`].Value" \
+              list-exports --query "Exports[?Name==\`backendIP5\`].Value" \
               --no-paginate --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
@@ -408,6 +408,14 @@ jobs:
             yum -y install nodejs
             yum -y install tar
             yum -y install gzip
+      - run:
+          name: Keep old WorkflowID in Kvdb for cleanup job
+          working_directory: ./.circleci/files
+          command: |
+            export OldWorkflowID=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
+            curl  -k "https://kvdb.io/GumKZk3B6UTzy66tWmEZy9/udacity" -d "$OldWorkflowID"
       # - run: 
       #     name: Get old stack Workflow ID
       #     command: |
@@ -425,7 +433,7 @@ jobs:
             aws cloudformation deploy \
               --template-file ".circleci/files/cloudfront.yml" \
               --stack-name InitialStack \
-              --parameter-overrides WorkflowIDNew="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -442,20 +450,22 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - run:
-          name: Get old stack workflow id
-          command: |
-            export OldWorkflowID=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-              --no-paginate --output text)
-            echo OldWorkflowID: "${OldWorkflowID}"
-            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"          
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-              --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"
+      # - run:
+      #     name: Get old stack workflow id
+      #     command: |
+      #       export OldWorkflowID=$(aws cloudformation \
+      #         list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+      #         --no-paginate --output text)
+      #       echo OldWorkflowID: "${OldWorkflowID}"
+      #       echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"          
+      #       export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+      #         --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+      #       echo Stack names: "${STACKS[@]}"
       - run:
           name: Remove old stacks and files
           command: |
+            OldWorkflowID=$(curl  --insecure https://kvdb.io/GumKZk3B6UTzy66tWmEZy9/udacity )
+            CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
             if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
             then
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
