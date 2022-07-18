@@ -315,12 +315,12 @@ jobs:
             pip install awscli
             apk add --upgrade bash
             apk add openssh-client
-      - run:
-          name: Fix host authenticity for inventory
-          command: |
-            var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
-            echo $var1
-            ssh-keyscan $var1 >> ~/.ssh/known_hosts
+      # - run:
+      #     name: Fix host authenticity for inventory
+      #     command: |
+      #       var1=$(cat ~/project/.circleci/ansible/inventory.txt | awk 'NR==2')
+      #       echo $var1
+      #       ssh-keyscan $var1 >> ~/.ssh/known_hosts
       - run:
           name: Deploy backend
           no_output_timeout: 30m
